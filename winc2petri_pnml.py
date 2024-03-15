@@ -23,8 +23,12 @@ def generate_petri_pnml(matrix):
                 else:
                     G.add_edge(places[i], transitions[j])
 
-    # Use Graphviz for Sugiyama layout
-    pos = graphviz_layout(G, prog="dot")
+    pos = graphviz_layout(G, prog="dot")  # Use Graphviz for Sugiyama layout
+
+    # Rotate and double the distances between objects
+    for node, coord in pos.items():
+        x, y = coord
+        pos[node] = (-2 * y, 2 * x)  # Swap x and y, negate new x, and double the distances
 
     # Creating PNML structure
     pnml = ET.Element("pnml")
