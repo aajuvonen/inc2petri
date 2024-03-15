@@ -19,9 +19,9 @@ def generate_petri_pnml(matrix):
         for j in range(num_transitions):
             if matrix[i][j] != 0:
                 if matrix[i][j] > 0:
-                    G.add_edge(transitions[j], places[i])
+                    G.add_edge(transitions[j], places[i], weight=str(matrix[i][j]))
                 else:
-                    G.add_edge(places[i], transitions[j])
+                    G.add_edge(places[i], transitions[j], weight=str(-matrix[i][j]))
 
     pos = graphviz_layout(G, prog="dot")  # Use Graphviz for Sugiyama layout
 
@@ -32,7 +32,7 @@ def generate_petri_pnml(matrix):
 
     # Creating PNML structure
     pnml = ET.Element("pnml")
-    net = ET.SubElement(pnml, "net", {"id": "information_warfare", "type": "http://www.pnml.org/version-2009/grammar/ptnet"})
+    net = ET.SubElement(pnml, "net", {"id": "output_petri", "type": "http://www.pnml.org/version-2009/grammar/pnml"})
 
     # Adding places
     for place_id in places:
@@ -44,6 +44,9 @@ def generate_petri_pnml(matrix):
             initial_marking = ET.SubElement(place, "initialMarking")
             text = ET.SubElement(initial_marking, "text")
             text.text = "1"
+        name = ET.SubElement(place, "name")
+        text = ET.SubElement(name, "text")
+        text.text = "1"
 
     # Adding transitions
     for transition_id in transitions:
@@ -51,16 +54,22 @@ def generate_petri_pnml(matrix):
         transition = ET.SubElement(net, "transition", {"id": transition_id})
         graphics = ET.SubElement(transition, "graphics")
         position = ET.SubElement(graphics, "position", {"x": str(x), "y": str(y)})
+        name = ET.SubElement(transition, "name")
+        text = ET.SubElement(name, "text")
+        text.text = "1"
 
     # Adding arcs
-    for arc in G.edges():
-        source, target = arc
-        ET.SubElement(net, "arc", {"id": f"arc_{source}_to_{target}", "source": source, "target": target})
+    for arc in G.edges(data=True):
+        source, target, data = arc
+        arc_elem = ET.SubElement(net, "arc", {"id": f"arc_{source}_to_{target}", "source": source, "target": target})
+        inscription = ET.SubElement(arc_elem, "inscription")
+        text = ET.SubElement(inscription, "text")
+        text.text = data["weight"]
 
     # Generating PNML file
     tree = ET.ElementTree(pnml)
-    xml_str = minidom.parseString(ET.tostring(pnml)).toprettyxml(indent="    ")
-    with open("output_petri.pnml", "w") as f:
+    xml_str = minidom.parseString(ET.tostring(pnml)).toprettyxml(indent="    ", encoding="UTF-8")
+    with open("output_petri.pnml", "wb") as f:
         f.write(xml_str)
 
 if __name__ == "__main__":
