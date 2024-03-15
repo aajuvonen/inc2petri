@@ -15,9 +15,9 @@ def generate_petri_pnml(matrix):
         for j in range(num_transitions):
             if matrix[i][j] != 0:
                 if matrix[i][j] > 0:
-                    arcs.append((places[i], transitions[j]))
-                else:
                     arcs.append((transitions[j], places[i]))
+                else:
+                    arcs.append((places[i], transitions[j]))
     
     # Creating PNML structure
     pnml = ET.Element("pnml")
