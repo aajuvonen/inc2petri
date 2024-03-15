@@ -14,20 +14,24 @@ def generate_petri_tex(matrix):
         for j in range(num_transitions):
             if matrix[i][j] != 0:
                 if matrix[i][j] > 0:
-                    arcs.append(f"({places[i]}, {transitions[j]})")
+                    arcs.append((transitions[j], places[i]))
                 else:
-                    arcs.append(f"({transitions[j]}, {places[i]})")
-    
-    # Generating 5-tuple in LaTeX format
-    initial_marking = [f"1" if any(place in arc for arc in arcs) else "0" for place in places]
-    petri_tex = r"""\begin{align*}
-    N & = (P, T, F, W, M_0) \\
-    P & = \{""" + ', '.join(places) + r"""\} \\
-    T & = \{""" + ', '.join(transitions) + r"""\} \\
-    F & = \{""" + ', '.join(arcs) + r"""\} \\
-    W & = \{1\} \\
-    M_0 & = \{""" + ', '.join(initial_marking) + r"""\}
-\end{align*}"""
+                    arcs.append((places[i], transitions[j]))
+
+    # Determine places with arcs leading from them
+    initial_marking = set()
+    for arc in arcs:
+        initial_marking.add(arc[0])
+
+    # Creating LaTeX representation
+    petri_tex = "\\begin{align*}\n"
+    petri_tex += "    N & = (P, T, F, W, M_0) \\\\\n"
+    petri_tex += "    P & = \\{" + ", ".join(places) + "\\} \\\\\n"
+    petri_tex += "    T & = \\{" + ", ".join(transitions) + "\\} \\\\\n"
+    petri_tex += "    F & = \\{" + ", ".join([f"({arc[0]}, {arc[1]})" for arc in arcs]) + "\\} \\\\\n"
+    petri_tex += "    W & = \\{1\\} \\\\\n"
+    petri_tex += "    M_0 & = (" + ", ".join(["1" if place in initial_marking else "0" for place in places]) + ") \n"
+    petri_tex += "\\end{align*}"
     
     return petri_tex
 
