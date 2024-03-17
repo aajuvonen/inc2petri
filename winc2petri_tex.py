@@ -10,18 +10,26 @@ def generate_petri_tex(matrix):
     places = [f"v_{i+1}" for i in range(num_places)]
     transitions = [f"T_{j+1}" for j in range(num_transitions)]
     arcs = []
+    weights = []
     for i in range(num_places):
         for j in range(num_transitions):
-            if matrix[i][j] != 0:
-                if matrix[i][j] > 0:
+            weight = matrix[i][j]
+            if weight != 0:
+                if weight > 0:
                     arcs.append((transitions[j], places[i]))
                 else:
                     arcs.append((places[i], transitions[j]))
+                weights.append(abs(weight))
 
-    # Determine places with arcs leading from them
-    initial_marking = set()
+    # Determine initial marking based on the sum of weights of outbound arcs
+    initial_marking = {}
     for arc in arcs:
-        initial_marking.add(arc[0])
+        place = arc[0]
+        weight = weights[arcs.index(arc)]
+        if place in initial_marking:
+            initial_marking[place] += weight
+        else:
+            initial_marking[place] = weight
 
     # Creating LaTeX representation
     petri_tex = "\\begin{align*}\n"
@@ -29,8 +37,8 @@ def generate_petri_tex(matrix):
     petri_tex += "    P & = \\{" + ", ".join(places) + "\\} \\\\\n"
     petri_tex += "    T & = \\{" + ", ".join(transitions) + "\\} \\\\\n"
     petri_tex += "    F & = \\{" + ", ".join([f"({arc[0]}, {arc[1]})" for arc in arcs]) + "\\} \\\\\n"
-    petri_tex += "    W & = \\{1\\} \\\\\n"
-    petri_tex += "    M_0 & = (" + ", ".join(["1" if place in initial_marking else "0" for place in places]) + ") \n"
+    petri_tex += "    W & = \\{" + ", ".join(map(str, weights)) + "\\} \\\\\n"
+    petri_tex += "    M_0 & = (" + ", ".join([str(initial_marking.get(place, 0)) for place in places]) + ") \n"
     petri_tex += "\\end{align*}"
     
     return petri_tex
