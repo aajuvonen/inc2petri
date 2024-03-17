@@ -40,13 +40,8 @@ def generate_petri_pnml(matrix):
         place = ET.SubElement(net, "place", {"id": place_id})
         graphics = ET.SubElement(place, "graphics")
         position = ET.SubElement(graphics, "position", {"x": str(x), "y": str(y)})
-        if any(place_id == arc[0] for arc in G.edges()):
-            initial_marking = ET.SubElement(place, "initialMarking")
-            text = ET.SubElement(initial_marking, "text")
-            text.text = "1"
         name = ET.SubElement(place, "name")
         text = ET.SubElement(name, "text")
-        text.text = "1"
 
     # Adding transitions
     for transition_id in transitions:
@@ -56,7 +51,6 @@ def generate_petri_pnml(matrix):
         position = ET.SubElement(graphics, "position", {"x": str(x), "y": str(y)})
         name = ET.SubElement(transition, "name")
         text = ET.SubElement(name, "text")
-        text.text = "1"
 
     # Adding arcs
     for arc in G.edges(data=True):
@@ -65,6 +59,17 @@ def generate_petri_pnml(matrix):
         inscription = ET.SubElement(arc_elem, "inscription")
         text = ET.SubElement(inscription, "text")
         text.text = data["weight"]
+
+    # Calculate initial tokens for places based on outbound arc weights
+    initial_tokens = [sum(abs(matrix[i][j]) for j in range(num_transitions) if matrix[i][j] < 0) for i in range(num_places)]
+
+    # Setting initial markings for places
+    for place_id, initial_token in zip(places, initial_tokens):
+        if initial_token > 0:
+            place_elem = net.find("./place[@id='{}']".format(place_id))
+            initial_marking = ET.SubElement(place_elem, "initialMarking")
+            text = ET.SubElement(initial_marking, "text")
+            text.text = str(initial_token)
 
     # Generating PNML file
     tree = ET.ElementTree(pnml)
