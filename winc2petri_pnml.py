@@ -36,7 +36,22 @@ def generate_petri_pnml(matrix):
 
     # Adding places
     for place_id in places:
-        x, y = pos[place_id]
+        if place_id not in G:
+            for transition_id in transitions:
+                G.add_edge(transition_id, place_id)
+
+    # Adding transitions
+    for transition_id in transitions:
+        if transition_id not in G:
+            for place_id in places:
+                G.add_edge(transition_id, place_id)
+
+    # Removing dummy arcs
+    G.remove_nodes_from(nx.isolates(G))
+
+    # Adding places
+    for place_id in places:
+        x, y = pos.get(place_id, (0, 0))  # Default position if not found
         place = ET.SubElement(net, "place", {"id": place_id})
         graphics = ET.SubElement(place, "graphics")
         position = ET.SubElement(graphics, "position", {"x": str(x), "y": str(y)})
@@ -45,7 +60,7 @@ def generate_petri_pnml(matrix):
 
     # Adding transitions
     for transition_id in transitions:
-        x, y = pos[transition_id]
+        x, y = pos.get(transition_id, (0, 0))  # Default position if not found
         transition = ET.SubElement(net, "transition", {"id": transition_id})
         graphics = ET.SubElement(transition, "graphics")
         position = ET.SubElement(graphics, "position", {"x": str(x), "y": str(y)})
@@ -55,10 +70,12 @@ def generate_petri_pnml(matrix):
     # Adding arcs
     for arc in G.edges(data=True):
         source, target, data = arc
-        arc_elem = ET.SubElement(net, "arc", {"id": f"arc_{source}_to_{target}", "source": source, "target": target})
-        inscription = ET.SubElement(arc_elem, "inscription")
-        text = ET.SubElement(inscription, "text")
-        text.text = data["weight"]
+        weight = data.get("weight")
+        if weight:
+            arc_elem = ET.SubElement(net, "arc", {"id": f"arc_{source}_to_{target}", "source": source, "target": target})
+            inscription = ET.SubElement(arc_elem, "inscription")
+            text = ET.SubElement(inscription, "text")
+            text.text = weight
 
     # Calculate initial tokens for places based on outbound arc weights
     initial_tokens = [sum(abs(matrix[i][j]) for j in range(num_transitions) if matrix[i][j] < 0) for i in range(num_places)]
