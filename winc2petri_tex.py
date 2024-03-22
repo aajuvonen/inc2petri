@@ -8,7 +8,7 @@ def generate_petri_tex(matrix):
     num_places = len(matrix)
     num_transitions = len(matrix[0])
     places = [f"v_{i+1}" for i in range(num_places)]
-    transitions = [f"T_{j+1}" for j in range(num_transitions)]
+    transitions = [f"e_{j+1}" for j in range(num_transitions)]
     arcs = []
     weights = []
     for i in range(num_places):
@@ -34,10 +34,10 @@ def generate_petri_tex(matrix):
     # Creating LaTeX representation
     petri_tex = "\\begin{align*}\n"
     petri_tex += "    N & = (P, T, F, W, M_0) \\\\\n"
-    petri_tex += "    P & = \\{" + ", ".join(places) + "\\} \\\\\n"
-    petri_tex += "    T & = \\{" + ", ".join(transitions) + "\\} \\\\\n"
-    petri_tex += "    F & = \\{" + ", ".join([f"({arc[0]}, {arc[1]})" for arc in arcs]) + "\\} \\\\\n"
-    petri_tex += "    W & = \\{" + ", ".join(map(str, weights)) + "\\} \\\\\n"
+    petri_tex += "    P & = (" + ", ".join(places) + ") \\\\\n"
+    petri_tex += "    T & = (" + ", ".join(transitions) + ") \\\\\n"
+    petri_tex += "    F & = (" + ", ".join([f"({arc[0]}, {arc[1]})" for arc in arcs]) + ") \\\\\n"
+    petri_tex += "    W & = (" + ", ".join(map(str, weights)) + ") \\\\\n"
     petri_tex += "    M_0 & = (" + ", ".join([str(initial_marking.get(place, 0)) for place in places]) + ") \n"
     petri_tex += "\\end{align*}"
     
